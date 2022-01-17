@@ -94,7 +94,6 @@ void render_host_led_state(void) {
     oled_write_P((leds & (1 << USB_LED_SCROLL_LOCK)) ? PSTR("SL:on") : PSTR("SL:- "), false);
     oled_write_P(keymap_config.nkro ? PSTR("NK:on") : PSTR("NK:- "), false);
     /* oled_write_P(get_autoshift_state() ? PSTR("AS:on") : PSTR("AS:- "), false); */
-
 }
 
 void oled_render_layer_state(void) {
@@ -183,7 +182,6 @@ void rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (process_caps_word(keycode, record)) { return true; }
     bool vim_mode = handle_vim_mode(keycode, record, L_VIM, L_RAISE);
     switch (keycode) {
             //     This theorethically fixes shift delay when using shifted keys
@@ -192,13 +190,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             /*         tap_code16(keycode); */
             /*     } */
             /*     return false; */
-        case LT(L_RAISE,KC_ENT) || LT(L_LOWER,KC_TAB):
+        case LT(L_RAISE, KC_ENT) || LT(L_LOWER, KC_TAB):
             // Force to allow R/L in VIM mode
             // FIXME: Doesn't work :(
             return true;
         default:
-            if (vim_mode)
-              return false;
-            return true;
+            if (vim_mode) return false;
+            return process_caps_word(keycode, record);
     }
+}
+
+void caps_word_set_user(bool active) {
+#ifdef OLED_ENABLE
+    if (active) {
+        oled_write_P(PSTR("CW:on"), false);
+    } else {
+        oled_write_P(PSTR("CW:- "), false);
+    }
+#endif
 }
