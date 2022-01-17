@@ -23,6 +23,7 @@ SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
 NKRO_ENABLE = yes            # USB Nkey Rollover
 BLUETOOTH_ENABLE = no       # Enable Bluetooth
 AUDIO_ENABLE = no           # Audio output
+AUTO_SHIFT_ENABLE = no
 
 ifeq ($(strip $(CUSTOM_DRASHNA_CODE_ENABLED)), yes)
 	SRC += ./caps_word.c \
@@ -35,4 +36,9 @@ endif
 VIM_MODE = yes
 ifeq ($(strip $(VIM_MODE)), yes)
 	SRC += ./vimmode.c
+endif
+
+CAPS_WORDS = yes
+ifeq ($(strip $(CAPS_WORDS)), yes)
+	SRC += ./caps_word.c
 endif

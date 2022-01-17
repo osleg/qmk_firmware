@@ -56,7 +56,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define RGB_MATRIX_TYPING_HEATMAP_DECREASE_DELAY_MS  250
 #  endif
 #  define RGB_MATRIX_STARTUP_MODE RGB_MATRIX_TYPING_HEATMAP
-// #  define SPLIT_LAYER_STATE_ENABLE
+#  define SPLIT_LAYER_STATE_ENABLE
 #endif
 
 #ifdef DEBOUNCE

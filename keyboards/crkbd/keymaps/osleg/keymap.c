@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 #include "vimmode.h"
 #include "action_layer.h"
+#include "caps_word.h"
+/* #include "process_auto_shift.h" */
 
 #define L_BASE 0
 #define L_DVORAK 1
@@ -55,15 +57,15 @@ _______,_______,_______,_______,_______,_______,                                
 
 	[L_ADJUST] = LAYOUT_split_3x6_3(
   RESET,  DF(1),  DF(0),  KC_NO,  KC_NO,  AG_TOGG,                                   KC_NO,  KC_NO,    KC_NO,    KC_NO,    KC_VOLU,  KC_NUM,
-RGB_TOG,RGB_HUI,RGB_SAI,RGB_VAI,  KC_NO,    KC_NO,                                   KC_NO,  KC_NO,    KC_NO,    KC_NO,    KC_MUTE,  KC_CAPS,
+RGB_TOG,RGB_HUI,RGB_SAI,RGB_VAI,  KC_NO,  KC_NO,                                   KC_NO,  KC_NO,    KC_NO,    KC_NO,    KC_MUTE,  KC_CAPS,
 RGB_MOD,RGB_HUD,RGB_SAD,RGB_VAD,  KC_NO,  NK_TOGG,                                   KC_NO,  KC_MPRV,  KC_MPLY,  KC_MNXT,  KC_VOLD,  KC_SCRL,
                                 KC_LGUI,_______, KC_SPC,                  KC_ENT,_______,KC_RALT),
 
 	[L_VIM] = LAYOUT_split_3x6_3(
 _______,_______,_______,_______,_______,_______,                                 _______,_______,_______,_______,_______,_______,
 _______,_______,_______,_______,_______,_______,                                 _______,_______,_______,_______,_______,_______,
-_______,_______,_______,_______,_______,_______,                                 _______,_______,_______,_______,_______,KC_RSFT,
-                                _______,  MO(L_ADJUST),_______,          _______,_______,_______),
+_______,_______,_______,_______,_______,_______,                                 _______,_______,_______,_______,_______,_______,
+                                _______,LT(L_LOWER,KC_TAB),_______,                 _______,_______,_______),
 };
 // clang-format on
 
@@ -87,10 +89,12 @@ void render_logo(void) {
 void render_host_led_state(void) {
     uint8_t leds = host_keyboard_leds();
     // FIXME: Better rewrite when space is finished
-    oled_write((leds & (1 << USB_LED_NUM_LOCK)) ? "NL:on" : "NL:- ", false);
-    oled_write((leds & (1 << USB_LED_CAPS_LOCK)) ? "CL:on" : "CL:- ", false);
-    oled_write((leds & (1 << USB_LED_SCROLL_LOCK)) ? "SL:on" : "SL:- ", false);
-    oled_write(keymap_config.nkro ? "NK:on" : "NK:- ", false);
+    oled_write_P((leds & (1 << USB_LED_NUM_LOCK)) ? PSTR("NL:on") : PSTR("NL:- "), false);
+    oled_write_P((leds & (1 << USB_LED_CAPS_LOCK)) ? PSTR("CL:on") : PSTR("CL:- "), false);
+    oled_write_P((leds & (1 << USB_LED_SCROLL_LOCK)) ? PSTR("SL:on") : PSTR("SL:- "), false);
+    oled_write_P(keymap_config.nkro ? PSTR("NK:on") : PSTR("NK:- "), false);
+    /* oled_write_P(get_autoshift_state() ? PSTR("AS:on") : PSTR("AS:- "), false); */
+
 }
 
 void oled_render_layer_state(void) {
@@ -122,9 +126,12 @@ void oled_render_layer_state(void) {
 
 void oled_render_led_state(void) { render_host_led_state(); }
 
+void oled_render_os(void) { oled_write_ln_P(keymap_config.swap_lalt_lgui ? PSTR("GUI:R") : PSTR("GUI:L"), false); }
+
 bool oled_task_user(void) {
     if (is_keyboard_master()) {
         oled_render_layer_state();
+        oled_render_os();
         oled_render_led_state();
     } else {
         render_logo();
@@ -137,29 +144,28 @@ bool oled_task_user(void) {
 
 void rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     HSV hsv;
-
-    if (layer_state_is(L_VIM)) {
-        hsv.h = 45;
+    if (layer_state_is(L_DVORAK)) {
+        hsv.h = 30;
         hsv.s = 255;
-        hsv.v = 255;
-    } else if (layer_state_is(L_DVORAK)) {
-        hsv.h = 75;
+        hsv.v = 204;
+    } else if (layer_state_is(L_VIM)) {
+        hsv.h = 14;
+        hsv.s = 255;
+        hsv.v = 204;
+    } else if (layer_state_is(L_ADJUST)) {
+        hsv.h = 220;
         hsv.s = 255;
         hsv.v = 255;
     } else if (layer_state_is(L_RAISE)) {
-        hsv.h = 105;
+        hsv.h = 109;
         hsv.s = 255;
         hsv.v = 255;
     } else if (layer_state_is(L_LOWER)) {
-        hsv.h = 135;
-        hsv.s = 255;
-        hsv.v = 255;
-    } else if (layer_state_is(L_ADJUST)) {
-        hsv.h = 165;
+        hsv.h = 1;
         hsv.s = 255;
         hsv.v = 255;
     } else {
-        hsv.h = 14;
+        hsv.h = 184;
         hsv.s = 255;
         hsv.v = 255;
     }
@@ -177,15 +183,22 @@ void rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (process_caps_word(keycode, record)) { return true; }
     bool vim_mode = handle_vim_mode(keycode, record, L_VIM, L_RAISE);
-    if (vim_mode) return false;
-    // This theorethically fixes shift delay when using shifted keys
-    /* switch (keycode) { */
-    /*     case QK_MODS ... QK_MODS_MAX: */
-    /*         if (record->event.pressed) { */
-    /*             tap_code16(keycode); */
-    /*         } */
-    /*         return false; */
-    /* } */
-    return true;
+    switch (keycode) {
+            //     This theorethically fixes shift delay when using shifted keys
+            /* case QK_MODS ... QK_MODS_MAX: */
+            /*     if (record->event.pressed) { */
+            /*         tap_code16(keycode); */
+            /*     } */
+            /*     return false; */
+        case LT(L_RAISE,KC_ENT) || LT(L_LOWER,KC_TAB):
+            // Force to allow R/L in VIM mode
+            // FIXME: Doesn't work :(
+            return true;
+        default:
+            if (vim_mode)
+              return false;
+            return true;
+    }
 }

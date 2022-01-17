@@ -1,7 +1,5 @@
 #include QMK_KEYBOARD_H
 #include "vimmode.h"
-#include <print.h>
-#include <string.h>
 
 // clang-format off
 #define HOLD_SHIFT   register_mods(MOD_BIT(KC_LSFT))
