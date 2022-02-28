@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#define USE_SERIAL
+#define USE_SERIAL_PD2
 #define MASTER_LEFT
 
 // SPLIT
@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define SPLIT_WPM_ENABLE
 #undef SOFT_SERIAL_PIN
 #define SOFT_SERIAL_PIN D2
+
+#define TAPPING_TERM 150
 
 // RGB
 #undef RGBLED_NUM
@@ -39,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* #define RGBLIGHT_ANIMATIONS */
 #define RGBLIGHT_EFFECT_TWINKLE
 #define RGBLIGHT_EFFECT_KNIGHT
-#define RGBLIGHT_EFFECT_RAINBOW_SWIRL
+/* #define RGBLIGHT_EFFECT_RAINBOW_SWIRL */
 /* #define RGBLIGHT_EFFECT_KNIGHT_LENGTH 3 */
 /* #define RGBLIGHT_LAYERS */
 /* #define RGBLIGHT_MAX_LAYERS 5 */
@@ -51,8 +53,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define OLED_TIMEOUT 30000
 #define OLED_BRIGHTNESS 96
 
-#define HIDRAW_ENABLED
-// Save size
+#ifdef DEBOUNCE
+#  undef DEBOUNCE
+#  define DEBOUNCE 8
+#endif
 
-#define TAPPING_TERM 200
-#define PERMISSIVE_HOLD
+
